@@ -1,4 +1,4 @@
-import 'package:offline_chat/helper.dart';
+import 'package:offline_chat/utils/helper.dart';
 
 class Message {
   String message;

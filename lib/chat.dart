@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:offline_chat/helper.dart';
-import 'package:offline_chat/message_manager.dart';
+import 'package:offline_chat/utils/helper.dart';
+import 'package:offline_chat/utils/message_manager.dart';
 import 'package:offline_chat/modal/message.dart';
 import 'package:offline_chat/people_drawer.dart';
 

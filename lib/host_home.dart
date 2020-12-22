@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:offline_chat/chat.dart';
-import 'package:offline_chat/helper.dart';
+import 'package:offline_chat/utils/helper.dart';
 import 'package:offline_chat/udp/udp.dart';
 
 class HostHome extends StatefulWidget {

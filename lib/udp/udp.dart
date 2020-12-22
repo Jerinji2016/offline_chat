@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:offline_chat/helper.dart';
+import 'package:offline_chat/utils/helper.dart';
 import 'package:offline_chat/modal/message.dart';
 import 'package:offline_chat/modal/person.dart';
 

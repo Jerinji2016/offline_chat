@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:offline_chat/udp/udp.dart';
 
-import 'modal/person.dart';
+import '../modal/person.dart';
 
 ValueNotifier<List<dynamic>> messages = new ValueNotifier([]);
 UDP udp;

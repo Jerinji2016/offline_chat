@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:offline_chat/client_home.dart';
-import 'package:offline_chat/helper.dart';
+import 'package:offline_chat/utils/helper.dart';
 import 'package:offline_chat/host_home.dart';
 import 'package:offline_chat/udp/udp.dart';
 import 'package:shared_preferences/shared_preferences.dart';

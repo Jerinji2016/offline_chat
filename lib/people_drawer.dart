@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:offline_chat/helper.dart';
+import 'package:offline_chat/utils/helper.dart';
 
 class PeopleDrawer extends StatelessWidget {
   @override

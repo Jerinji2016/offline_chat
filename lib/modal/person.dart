@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:offline_chat/helper.dart';
+import 'package:offline_chat/utils/helper.dart';
 
 class Person {
   final int code;
