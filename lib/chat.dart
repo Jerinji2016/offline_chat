@@ -3,11 +3,12 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:offline_chat/send_private.dart';
 import 'package:offline_chat/utils/helper.dart';
-import 'package:offline_chat/utils/message_manager.dart';
+
 import 'package:offline_chat/modal/message.dart';
 import 'package:offline_chat/people_drawer.dart';
 
 import 'modal/person.dart';
+import 'udp/udp.dart';
 
 class Chat extends StatefulWidget {
   @override

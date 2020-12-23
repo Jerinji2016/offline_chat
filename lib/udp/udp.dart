@@ -5,6 +5,27 @@ import 'package:offline_chat/utils/helper.dart';
 import 'package:offline_chat/modal/message.dart';
 import 'package:offline_chat/modal/person.dart';
 
+//  Code to get host
+const int GET_HOST = 111;
+
+//  Code to accept client request before showing to client
+const int CONNECT = 112;
+
+//  Code to send message
+const int MESSAGE = 113;
+
+//  Code user joined
+const int USER_JOINED = 118;
+
+//  Code user left
+const int USER_LEFT = 119;
+
+//  Response to GET_HOST by host
+const int HOST_RESPONSE = 114;
+
+//  Host Kill
+const int HOST_KILLED = 120;
+
 class UDP {
   String address;
   InternetAddress ip;
@@ -60,27 +81,6 @@ class UDP {
     });
   }
 
-//  Code to get host
-  static const int GET_HOST = 111;
-
-//  Code to accept client request before showing to client
-  static const int CONNECT = 112;
-
-//  Code to send message
-  static const int MESSAGE = 113;
-
-//  Code user joined
-  static const int USER_JOINED = 118;
-
-//  Code user left
-  static const int USER_LEFT = 119;
-
-//  Response to GET_HOST by host
-  static const int HOST_RESPONSE = 114;
-
-//  Host Kill
-  static const int HOST_KILLED = 120;
-
   void handleData(Datagram dg) {
     String receivedText = String.fromCharCodes(dg.data);
     List<String> received = receivedText.split(X);
@@ -113,14 +113,12 @@ class UDP {
   }
 
   hostResponse(List<String> received) {
-    //  Received: [ 111, Client IP ]
     String message =
         new Person(HOST_RESPONSE, name, hostIp.address).encodeString();
     socket.send(utf8.encode(message), InternetAddress(received[1]), PORT);
   }
 
   addHost(String received) {
-    //  Received: [ 112, Host IP, name ]
     Person p = Person.decodeString(received);
     hosts.putIfAbsent(p.address, () => p.name);
   }

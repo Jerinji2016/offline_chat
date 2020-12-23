@@ -1,13 +1,11 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:offline_chat/chat.dart';
-import 'package:offline_chat/utils/helper.dart';
-import 'package:offline_chat/utils/message_manager.dart';
 import 'package:offline_chat/modal/person.dart';
 import 'package:offline_chat/udp/udp.dart';
+import 'package:offline_chat/utils/helper.dart';
+
 
 class ClientHome extends StatefulWidget {
   @override
@@ -15,7 +13,6 @@ class ClientHome extends StatefulWidget {
 }
 
 class _ClientHomeState extends State<ClientHome> {
-  StreamSubscription<RawSocketEvent> _udpListener;
   bool isHostLoading = false;
 
   @override
@@ -25,8 +22,6 @@ class _ClientHomeState extends State<ClientHome> {
   }
 
   init() async {
-    //  Creates an instance of udp & automatically binds to the IP
-    //  Also sets listeners with handlers
     udp = new UDP(ip.address);
     await udp.connect();
     pingHost();

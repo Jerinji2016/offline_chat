@@ -9,11 +9,6 @@ class Message {
 
   Message(this.code, this.message, this.time, this.by, this.ip);
 
-  //  0 - Code
-  //  1 - sent by
-  //  2 - ip address
-  //  3 - time
-  //  4 - message
   String encodeString() => encode([
         code.toString(),
         by,

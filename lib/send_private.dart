@@ -3,10 +3,10 @@ import 'package:offline_chat/modal/message.dart';
 import 'package:offline_chat/modal/person.dart';
 import 'package:offline_chat/utils/helper.dart';
 
-import 'utils/message_manager.dart';
+import 'udp/udp.dart';
 
 class SendPrivate extends StatefulWidget {
-  String message;
+  final String message;
   SendPrivate(this.message);
   @override
   _SendPrivateState createState() => _SendPrivateState();

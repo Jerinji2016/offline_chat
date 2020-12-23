@@ -2,9 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:offline_chat/client_home.dart';
-import 'package:offline_chat/utils/helper.dart';
 import 'package:offline_chat/host_home.dart';
-import 'package:offline_chat/udp/udp.dart';
+import 'package:offline_chat/utils/helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wifi/wifi.dart';
 
@@ -29,17 +28,7 @@ void main() async {
   }
 
   print("Current IP : $ip");
-
-  // RawDatagramSocket.bind(ip, PORT, reuseAddress: true)
-  //   ..then(
-  //     (RawDatagramSocket udpSocket) {
-  //       print("DataGram Socket binded to IP: ${ip.address}");
-  //       socket = udpSocket;
-
-  //       socket.broadcastEnabled = true;
-  //     },
-  //   );
-
+  
   runApp(
     MaterialApp(
       home: ChatApp(),
@@ -90,7 +79,7 @@ class _ChatAppState extends State<ChatApp> with TickerProviderStateMixin {
     _controller = new AnimationController(
       vsync: this,
       duration: Duration(
-        seconds: 5,
+        seconds: 3,
       ),
     );
 
