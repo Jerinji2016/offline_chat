@@ -32,4 +32,3 @@ List<String> decode(text) => text.split(X);
 String encode(List<dynamic> list) => list.join(X);
 
 ValueNotifier<bool> hostConnected = new ValueNotifier(false);
-

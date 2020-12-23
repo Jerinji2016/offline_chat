@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:offline_chat/send_private.dart';
 import 'package:offline_chat/utils/helper.dart';
 import 'package:offline_chat/utils/message_manager.dart';
 import 'package:offline_chat/modal/message.dart';
@@ -67,6 +70,7 @@ class _ChatState extends State<Chat> {
                     FlatButton(
                       color: Colors.green,
                       onPressed: sendMessage,
+                      onLongPress: sendPrivate,
                       child: Text(
                         "Send",
                         style: TextStyle(
@@ -89,8 +93,6 @@ class _ChatState extends State<Chat> {
 
     if (text.isEmpty) return;
 
-    print("Sending: $text");
-
     Message message = new Message(
       MESSAGE,
       text,
@@ -104,6 +106,35 @@ class _ChatState extends State<Chat> {
     setState(() {});
 
     _messageController.text = "";
+  }
+
+  void sendPrivate() async {
+    String text = _messageController.text.trim();
+    if (text.isEmpty) return;
+
+    FocusScope.of(context).unfocus();
+    bool canceled = await showDialog(
+          context: context,
+          barrierColor: Colors.transparent,
+          barrierDismissible: true,
+          builder: (_) => Dialog(
+            elevation: 10.0,
+            child: BackdropFilter(
+                filter: ImageFilter.blur(
+                  sigmaX: 2.0,
+                  sigmaY: 2.0,
+                ),
+                child: SendPrivate(text)),
+            backgroundColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+          ),
+        ) ??
+        true;
+
+    if (!canceled) _messageController.text = "";
+    setState(() {});
   }
 }
 
@@ -138,7 +169,7 @@ class _TerminalState extends State<Terminal> {
 
     messages.addListener(() {
       print("New Message");
-      _scrollController.animateTo(
+      _scrollController?.animateTo(
         1,
         duration: Duration(seconds: 1),
         curve: Curves.fastLinearToSlowEaseIn,
