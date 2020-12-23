@@ -1,4 +1,4 @@
-# offline_chat
+# Offline Chat
 
 An offline chat application using UDP
 
