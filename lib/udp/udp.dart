@@ -5,25 +5,25 @@ import 'package:offline_chat/utils/helper.dart';
 import 'package:offline_chat/modal/message.dart';
 import 'package:offline_chat/modal/person.dart';
 
-//  Code to get host
+///  Code to get host
 const int GET_HOST = 111;
 
-//  Code to accept client request before showing to client
+///  Code to accept client request before showing to client
 const int CONNECT = 112;
 
-//  Code to send message
+///  Code to send message
 const int MESSAGE = 113;
 
-//  Code user joined
+///  Code user joined
 const int USER_JOINED = 118;
 
-//  Code user left
+///  Code user left
 const int USER_LEFT = 119;
 
-//  Response to GET_HOST by host
+///  Response to GET_HOST by host
 const int HOST_RESPONSE = 114;
 
-//  Host Kill
+///  Host Kill
 const int HOST_KILLED = 120;
 
 class UDP {
