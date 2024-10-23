@@ -12,7 +12,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-  wifi: ^0.1.5
   shared_preferences: ^2.3.2
   very_good_analysis: ^6.0.0
 
