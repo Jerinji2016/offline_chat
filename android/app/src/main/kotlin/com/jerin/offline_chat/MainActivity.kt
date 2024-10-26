@@ -1,4 +1,4 @@
-package com.dev.offline_chat
+package com.jerin.offline_chat
 
 import io.flutter.embedding.android.FlutterActivity
 
