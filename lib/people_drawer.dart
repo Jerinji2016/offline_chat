@@ -15,14 +15,14 @@ class PeopleDrawer extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            margin: EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
-            padding: EdgeInsets.symmetric(vertical: 10.0),
-            decoration: BoxDecoration(
+            margin: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+            padding: const EdgeInsets.symmetric(vertical: 10.0),
+            decoration: const BoxDecoration(
               border: Border(
                 bottom: BorderSide(width: 1.0, color: Colors.white),
               ),
             ),
-            child: Row(
+            child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
@@ -39,14 +39,14 @@ class PeopleDrawer extends StatelessWidget {
           Expanded(
             child: ListView.builder(
               itemBuilder: (_, __) => Container(
-                padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 30.0),
+                padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 30.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
                       child: Text(
                         people[__].name,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
@@ -56,7 +56,7 @@ class PeopleDrawer extends StatelessWidget {
                     Container(
                       child: Text(
                         "\t" + people[__].ip.address,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
                         ),

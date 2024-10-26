@@ -1,36 +1,19 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:offline_chat/client_home.dart';
-import 'package:offline_chat/host_home.dart';
-import 'package:offline_chat/utils/helper.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wifi/wifi.dart';
+
+import 'client_home.dart';
+import 'host_home.dart';
+import 'utils/helper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  SharedPreferences pref = await SharedPreferences.getInstance();
-  name = pref.getString(NAME) ?? name;
+  final pref = await SharedPreferences.getInstance();
+  name = pref.getString(nameKey) ?? name;
 
-  try {
-    ip = InternetAddress(
-      await Wifi.ip,
-      type: InternetAddressType.IPv4,
-    );
-    isHost = isActuallyHost = false;
-  } catch (e) {
-    ip = InternetAddress(
-      "255.255.255.255",
-      type: InternetAddressType.IPv4,
-    );
-    isHost = isActuallyHost = true;
-  }
-
-  print("Current IP : $ip");
-  
   runApp(
-    MaterialApp(
+    const MaterialApp(
       home: ChatApp(),
       debugShowCheckedModeBanner: false,
     ),
@@ -38,87 +21,58 @@ void main() async {
 }
 
 class ChatApp extends StatefulWidget {
+  const ChatApp({super.key});
+
   @override
   _ChatAppState createState() => _ChatAppState();
 }
 
 class _ChatAppState extends State<ChatApp> with TickerProviderStateMixin {
-  AnimationController _controller;
-  Animation<double> _scaleUp, _scaleDown;
+  late final _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 3),
+  );
 
-  Animation<double> opacityIn(b, e) => Tween<double>(
-        begin: 0,
-        end: 1,
-      ).animate(
+  late final _scaleUp = Tween<double>(begin: 1, end: 1.25).animate(
+    CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(1 / 8, 1 / 6, curve: Curves.ease),
+    ),
+  );
+
+  late final _scaleDown = Tween<double>(begin: 1.25, end: 1).animate(
+    CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(1 / 6, 1 / 3, curve: Curves.ease),
+    ),
+  );
+
+  Animation<double> opacityIn(double begin, double end) => Tween<double>(begin: 0, end: 1).animate(
         CurvedAnimation(
           parent: _controller,
-          curve: Interval(
-            b,
-            e,
-            curve: Curves.ease,
-          ),
+          curve: Interval(begin, end, curve: Curves.ease),
         ),
       );
 
-  Animation<double> translateIn(b, e) => Tween<double>(
-        begin: 30,
-        end: 0,
-      ).animate(
+  Animation<double> translateIn(double begin, double end) => Tween<double>(begin: 30, end: 0).animate(
         CurvedAnimation(
           parent: _controller,
-          curve: Interval(
-            b,
-            e,
-            curve: Curves.ease,
-          ),
+          curve: Interval(begin, end, curve: Curves.ease),
         ),
       );
 
   @override
-  initState() {
-    _controller = new AnimationController(
-      vsync: this,
-      duration: Duration(
-        seconds: 3,
-      ),
-    );
-
-    _scaleUp = Tween<double>(
-      begin: 1,
-      end: 1.25,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Interval(
-          1 / 8,
-          1 / 6,
-          curve: Curves.ease,
-        ),
-      ),
-    );
-
-    _scaleDown = Tween<double>(
-      begin: 1.25,
-      end: 1,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Interval(
-          1 / 6,
-          1 / 3,
-          curve: Curves.ease,
-        ),
-      ),
-    );
-
-    _controller.forward(from: 0.0);
-
+  void initState() {
     super.initState();
+
+    SchedulerBinding.instance.addPostFrameCallback(
+      (timestamp) => _controller.forward(),
+    );
   }
 
   @override
-  dispose() {
-    _controller?.dispose();
+  void dispose() {
+    _controller.dispose();
     super.dispose();
   }
 
@@ -144,14 +98,13 @@ class _ChatAppState extends State<ChatApp> with TickerProviderStateMixin {
                         offset: Offset(
                           0,
                           Tween<double>(
-                            begin:
-                                (MediaQuery.of(context).size.height / 2) - 40,
+                            begin: (MediaQuery.of(context).size.height / 2) - 40,
                             end: 0,
                           )
                               .animate(
                                 CurvedAnimation(
                                   parent: _controller,
-                                  curve: Interval(
+                                  curve: const Interval(
                                     1 / 3,
                                     2 / 3,
                                     curve: Curves.ease,
@@ -165,13 +118,11 @@ class _ChatAppState extends State<ChatApp> with TickerProviderStateMixin {
                           child: Transform.scale(
                             scale: _scaleDown.value,
                             child: Container(
-                              margin: EdgeInsets.only(bottom: 10.0),
+                              margin: const EdgeInsets.only(bottom: 10.0),
                               alignment: Alignment.bottomCenter,
                               child: Text(
-                                isActuallyHost
-                                    ? "You are the Host"
-                                    : "You are the client",
-                                style: TextStyle(
+                                isActuallyHost ? "You are the Host" : "You are the client",
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 24.0,
                                   fontWeight: FontWeight.bold,
@@ -192,7 +143,7 @@ class _ChatAppState extends State<ChatApp> with TickerProviderStateMixin {
                       child: Transform.translate(
                         offset: Offset(0, translateIn(0.5, 0.9).value),
                         child: Container(
-                          child: ChangeName(),
+                          child: const ChangeName(),
                         ),
                       ),
                     ),
@@ -220,46 +171,38 @@ class _ChatAppState extends State<ChatApp> with TickerProviderStateMixin {
 }
 
 class ChangeName extends StatefulWidget {
+  const ChangeName({super.key});
+
   @override
   _ChangeNameState createState() => _ChangeNameState();
 }
 
 class _ChangeNameState extends State<ChangeName> with TickerProviderStateMixin {
-  AnimationController _controller;
-  Animation<double> _opacity, _translate;
+  late final _controller = new AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 700),
+    reverseDuration: const Duration(milliseconds: 400),
+  );
+
+  late final Animation<double> _opacity = Tween<double>(begin: 0, end: 1).animate(
+    CurvedAnimation(parent: _controller, curve: Curves.ease),
+  );
+  late final Animation<double> _translate = Tween<double>(begin: 20, end: 0).animate(
+    CurvedAnimation(parent: _controller, curve: Curves.ease),
+  );
 
   bool nameEdit = false;
-  TextEditingController _nameController = new TextEditingController();
+  final _nameController = new TextEditingController();
 
   @override
-  initState() {
-    _controller = new AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 700),
-      reverseDuration: Duration(milliseconds: 400),
-    );
-
-    _opacity = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.ease,
-      ),
-    );
-
-    _translate = Tween<double>(begin: 20, end: 0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.ease,
-      ),
-    );
-
+  void initState() {
     _controller.forward();
     super.initState();
   }
 
   @override
-  dispose() {
-    _nameController?.dispose();
+  void dispose() {
+    _nameController.dispose();
     super.dispose();
   }
 
@@ -286,10 +229,10 @@ class _ChangeNameState extends State<ChangeName> with TickerProviderStateMixin {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: EdgeInsets.all(10.0),
+              padding: const EdgeInsets.all(10.0),
               child: Text(
                 name,
-                style: TextStyle(color: Colors.white, fontSize: 20.0),
+                style: const TextStyle(color: Colors.white, fontSize: 20.0),
               ),
             ),
             Material(
@@ -306,8 +249,8 @@ class _ChangeNameState extends State<ChangeName> with TickerProviderStateMixin {
                   ),
                 borderRadius: BorderRadius.circular(20.0),
                 child: Container(
-                  padding: EdgeInsets.all(10.0),
-                  child: Icon(Icons.edit, color: Colors.white60),
+                  padding: const EdgeInsets.all(10.0),
+                  child: const Icon(Icons.edit, color: Colors.white60),
                 ),
               ),
             ),
@@ -321,17 +264,17 @@ class _ChangeNameState extends State<ChangeName> with TickerProviderStateMixin {
           children: [
             Container(
               width: MediaQuery.of(context).size.width / 2.5,
-              padding: EdgeInsets.all(10.0),
+              padding: const EdgeInsets.all(10.0),
               child: TextField(
                 textAlign: TextAlign.center,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: "Enter your name",
                   hintStyle: TextStyle(
                     color: Colors.white30,
                   ),
                 ),
                 controller: _nameController,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                 ),
               ),
@@ -345,13 +288,10 @@ class _ChangeNameState extends State<ChangeName> with TickerProviderStateMixin {
                 onTap: () => _controller.reverse(from: 1.0)
                   ..whenComplete(
                     () async {
-                      name = (_nameController.text.trim().length > 0)
-                          ? _nameController.text.trim()
-                          : name;
+                      name = (_nameController.text.trim().length > 0) ? _nameController.text.trim() : name;
 
-                      SharedPreferences pref =
-                          await SharedPreferences.getInstance();
-                      pref.setString(NAME, name);
+                      SharedPreferences pref = await SharedPreferences.getInstance();
+                      pref.setString(nameKey, name);
 
                       setState(() {
                         nameEdit = false;
@@ -361,8 +301,8 @@ class _ChangeNameState extends State<ChangeName> with TickerProviderStateMixin {
                   ),
                 borderRadius: BorderRadius.circular(50.0),
                 child: Container(
-                  padding: EdgeInsets.all(10.0),
-                  child: Icon(Icons.done, color: Colors.white60),
+                  padding: const EdgeInsets.all(10.0),
+                  child: const Icon(Icons.done, color: Colors.white60),
                 ),
               ),
             ),

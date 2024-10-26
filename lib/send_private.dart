@@ -148,17 +148,17 @@ class _SendPrivateState extends State<SendPrivate> {
     );
   }
 
-  sendPrivate() {
-    Message message = new Message(
-      MESSAGE,
+  void sendPrivate() {
+    Message message = Message(
+      ConnectionCode.message.index,
       widget.message,
       DateTime.now(),
       name,
-      (isHost ? hostIp : ip).address,
+      (isHost ? hostIp : ip)?.address ?? '',
     );
 
     privatePeople.forEach((key, value) {
-      udp.send(widget.message, value.address);
+      udp?.send(widget.message, value.address);
     });
 
     messages.value.add(message);

@@ -1,34 +1,24 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:offline_chat/send_private.dart';
-import 'package:offline_chat/utils/helper.dart';
 
-import 'package:offline_chat/modal/message.dart';
-import 'package:offline_chat/people_drawer.dart';
-
+import 'modal/message.dart';
 import 'modal/person.dart';
+import 'people_drawer.dart';
+import 'send_private.dart';
 import 'udp/udp.dart';
+import 'utils/helper.dart';
 
-class Chat extends StatefulWidget {
+class ChatScreen extends StatefulWidget {
+  const ChatScreen({super.key});
+
   @override
-  _ChatState createState() => _ChatState();
+  State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatState extends State<Chat> {
-  TextEditingController _messageController = TextEditingController();
-  GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    hostConnected.removeListener(() {});
-    super.dispose();
-  }
+class _ChatScreenState extends State<ChatScreen> {
+  final _messageController = TextEditingController();
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +26,7 @@ class _ChatState extends State<Chat> {
       child: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: Text("Host on ${hostIp.address}"),
+          title: Text('Host on ${hostIp.address}'),
           centerTitle: true,
           backgroundColor: Colors.black,
         ),
@@ -47,41 +37,38 @@ class _ChatState extends State<Chat> {
           width: MediaQuery.of(context).size.width,
           child: Column(
             children: [
-              Expanded(
+              const Expanded(
                 child: Terminal(),
               ),
               Container(
-                padding: EdgeInsets.all(10.0),
+                padding: const EdgeInsets.all(10),
                 child: Row(
                   children: [
                     Expanded(
                       flex: 10,
                       child: TextField(
-                        style: TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                         controller: _messageController,
-                        decoration: InputDecoration(
-                          hintText: "Enter message",
+                        decoration: const InputDecoration(
+                          hintText: 'Enter message',
                           hintStyle: TextStyle(color: Colors.white54),
                         ),
                       ),
                     ),
-                    Spacer(
-                      flex: 1,
-                    ),
-                    FlatButton(
-                      color: Colors.green,
+                    const Spacer(),
+                    ElevatedButton(
                       onPressed: sendMessage,
                       onLongPress: sendPrivate,
-                      child: Text(
-                        "Send",
+                      child: const Text(
+                        'Send',
                         style: TextStyle(
                           color: Colors.white,
                         ),
                       ),
-                    )
+                    ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -89,90 +76,91 @@ class _ChatState extends State<Chat> {
     );
   }
 
-  void sendMessage() async {
-    String text = _messageController.text.trim();
+  Future<void> sendMessage() async {
+    final text = _messageController.text.trim();
 
     if (text.isEmpty) return;
 
-    Message message = new Message(
-      MESSAGE,
+    final message = Message(
+      ConnectionCode.message.index,
       text,
       DateTime.now(),
       name,
-      (isHost ? hostIp : ip).address,
+      (isHost ? hostIp : ip)?.address ?? 'no-address',
     );
 
-    udp.broadcast(message.encodeString(), people);
+    udp?.broadcast(message.encodeString(), people);
     messages.value.add(message);
     setState(() {});
 
-    _messageController.text = "";
+    _messageController.clear();
   }
 
-  void sendPrivate() async {
-    String text = _messageController.text.trim();
+  Future<void> sendPrivate() async {
+    final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
     FocusScope.of(context).unfocus();
-    bool canceled = await showDialog(
+    final canceled = await showDialog<bool?>(
           context: context,
           barrierColor: Colors.transparent,
-          barrierDismissible: true,
           builder: (_) => Dialog(
-            elevation: 10.0,
-            child: BackdropFilter(
-                filter: ImageFilter.blur(
-                  sigmaX: 2.0,
-                  sigmaY: 2.0,
-                ),
-                child: SendPrivate(text)),
+            elevation: 10,
             backgroundColor: Colors.transparent,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(
+                sigmaX: 2,
+                sigmaY: 2,
+              ),
+              child: SendPrivate(text),
             ),
           ),
         ) ??
         true;
 
-    if (!canceled) _messageController.text = "";
+    if (!canceled) _messageController.text = '';
     setState(() {});
+  }
+
+  @override
+  void dispose() {
+    hostConnected.removeListener(() {});
+    super.dispose();
   }
 }
 
 class Terminal extends StatefulWidget {
+  const Terminal({super.key});
+
   @override
-  _TerminalState createState() => _TerminalState();
+  State<Terminal> createState() => _TerminalState();
 }
 
 class _TerminalState extends State<Terminal> {
-  ScrollController _scrollController = ScrollController();
+  final _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     hostListener();
   }
 
-  @override
-  dispose() {
-    messages.value.length = 0;
-    messages.notifyListeners();
-
-    super.dispose();
-  }
-
-  hostListener() {
+  void hostListener() {
     hostConnected.addListener(() {
       if (!hostConnected.value) {
-        print("Host not available");
+        debugPrint('Host not available');
       }
       Navigator.of(context).pop();
     });
 
     messages.addListener(() {
-      print("New Message");
-      _scrollController?.animateTo(
+      debugPrint('New Message');
+      _scrollController.animateTo(
         1,
-        duration: Duration(seconds: 1),
+        duration: const Duration(seconds: 1),
         curve: Curves.fastLinearToSlowEaseIn,
       );
     });
@@ -181,21 +169,21 @@ class _TerminalState extends State<Terminal> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(10.0),
+      padding: const EdgeInsets.all(10),
       child: ValueListenableBuilder(
         valueListenable: messages,
         builder: (_, message, ___) => ListView.builder(
           reverse: true,
           controller: _scrollController,
           itemBuilder: (_, __) {
-            int index = message.length - 1 - __;
+            final index = message.length - 1 - __;
             return (message[index] is Person)
                 ? Container(
                     alignment: Alignment.center,
-                    padding: EdgeInsets.symmetric(vertical: 10.0),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     child: Text(
-                      "${message[index].name} joined the chat",
-                      style: TextStyle(
+                      '${message[index].name} joined the chat',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -205,37 +193,34 @@ class _TerminalState extends State<Terminal> {
                   )
                 : (message[index] is Message)
                     ? Container(
-                        padding: EdgeInsets.symmetric(
-                          vertical: 10.0,
-                          horizontal: 10.0,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 10,
                         ),
                         alignment:
-                            ((isHost && message[index].ip == hostIp.address) ||
-                                    (message[index].ip == ip.address))
+                            ((isHost && message[index].ip == hostIp.address) || (message[index].ip == ip?.address))
                                 ? Alignment.centerRight
                                 : Alignment.centerLeft,
                         child: Column(
-                          crossAxisAlignment: ((isHost &&
-                                      message[index].ip == hostIp.address) ||
-                                  (message[index].ip == ip.address))
-                              ? CrossAxisAlignment.end
-                              : CrossAxisAlignment.start,
+                          crossAxisAlignment:
+                              ((isHost && message[index].ip == hostIp.address) || (message[index].ip == ip?.address))
+                                  ? CrossAxisAlignment.end
+                                  : CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(
-                              padding: EdgeInsets.symmetric(vertical: 3.0),
-                              margin: EdgeInsets.symmetric(vertical: 3.0),
-                              decoration: BoxDecoration(
+                              padding: const EdgeInsets.symmetric(vertical: 3),
+                              margin: const EdgeInsets.symmetric(vertical: 3),
+                              decoration: const BoxDecoration(
                                 border: Border(
                                   bottom: BorderSide(
-                                    width: 1.0,
                                     color: Colors.grey,
                                   ),
                                 ),
                               ),
                               child: Text(
-                                "${message[index].by}@${message[index].ip}",
-                                style: TextStyle(
+                                '${message[index].by}@${message[index].ip}',
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 13,
                                 ),
@@ -243,8 +228,8 @@ class _TerminalState extends State<Terminal> {
                             ),
                             Container(
                               child: Text(
-                                message[index].message,
-                                style: TextStyle(
+                                message[index].message.toString(),
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,
                                   fontWeight: FontWeight.w500,
@@ -255,14 +240,20 @@ class _TerminalState extends State<Terminal> {
                         ),
                       )
                     : Container(
-                        margin: EdgeInsets.symmetric(vertical: 5.0),
+                        margin: const EdgeInsets.symmetric(vertical: 5),
                         color: Colors.red,
-                        height: 10.0,
+                        height: 10,
                       );
           },
           itemCount: message.length,
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 }

@@ -1,15 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:offline_chat/chat.dart';
-import 'package:offline_chat/modal/person.dart';
-import 'package:offline_chat/udp/udp.dart';
-import 'package:offline_chat/utils/helper.dart';
-
+import 'chat.dart';
+import 'modal/person.dart';
+import 'udp/udp.dart';
+import 'utils/helper.dart';
 
 class ClientHome extends StatefulWidget {
+  const ClientHome({super.key});
+
   @override
-  _ClientHomeState createState() => _ClientHomeState();
+  State<ClientHome> createState() => _ClientHomeState();
 }
 
 class _ClientHomeState extends State<ClientHome> {
@@ -18,65 +19,41 @@ class _ClientHomeState extends State<ClientHome> {
   @override
   void initState() {
     super.initState();
-    init();
-  }
-
-  init() async {
-    udp = new UDP(ip.address);
-    await udp.connect();
+    udp = UDP(ip?.address ?? '');
+    udp?.connect();
     pingHost();
-  }
-
-  @override
-  void dispose() {
-    udp.disconnect();
-    super.dispose();
-  }
-
-  pingHost() async {
-    setState(() => isHostLoading = true);
-
-    for (int i = 0; i < 2; i++) {
-      print("Pinging to ${hostIp.address}");
-
-      String message = encode([GET_HOST, ip.address]);
-      udp.send(message, hostIp.address);
-      await Future.delayed(Duration(seconds: 3));
-    }
-
-    setState(() => isHostLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.all(30.0),
-      padding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+      margin: const EdgeInsets.all(30),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(25.0),
+        borderRadius: BorderRadius.circular(25),
         border: Border.all(
-          width: 2.0,
+          width: 2,
           color: Colors.white,
         ),
       ),
       child: Column(
         children: [
           Container(
-            margin: EdgeInsets.only(bottom: 10.0),
-            padding: EdgeInsets.symmetric(vertical: 10.0),
-            decoration: BoxDecoration(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: const BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  width: 2.0,
+                  width: 2,
                   color: Colors.white,
                 ),
               ),
             ),
-            child: Row(
+            child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "CONNECT TO",
+                  'CONNECT TO',
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.bold,
@@ -87,31 +64,36 @@ class _ClientHomeState extends State<ClientHome> {
             ),
           ),
           Expanded(
-            child: hosts.length > 0
+            child: hosts.isNotEmpty
                 ? ListView.builder(
-                    itemBuilder: (_, __) {
-                      List<String> hostKeys = hosts.keys.toList();
+                    itemBuilder: (context, index) {
+                      final hostKeys = hosts.keys.toList();
                       return Container(
-                        margin: EdgeInsets.all(10.0),
+                        margin: const EdgeInsets.all(10),
                         child: Material(
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15.0),
+                            borderRadius: BorderRadius.circular(15),
                           ),
                           color: Colors.white12,
                           child: InkWell(
                             splashColor: Colors.transparent,
-                            highlightColor: Colors.green[600].withOpacity(0.45),
-                            borderRadius: BorderRadius.circular(15.0),
+                            highlightColor: Colors.green.shade600.withOpacity(0.45),
+                            borderRadius: BorderRadius.circular(15),
                             onTap: () async {
-                              Person person =
-                                  new Person(CONNECT, name, ip.address);
-                              people.clear();
-                              people.add(new Person(
-                                  CONNECT, hosts[hostKeys[__]], hostKeys[__]));
+                              final person = Person(ConnectionCode.connect.index, name, ip?.address ?? '');
+                              people
+                                ..clear()
+                                ..add(
+                                  Person(
+                                    ConnectionCode.connect.index,
+                                    hosts[hostKeys[index]] ?? '',
+                                    hostKeys[index],
+                                  ),
+                                );
 
-                              udp.send(
+                              udp?.send(
                                 person.encodeString(),
-                                hostKeys[__],
+                                hostKeys[index],
                               );
 
                               hosts.clear();
@@ -119,62 +101,57 @@ class _ClientHomeState extends State<ClientHome> {
 
                               hostConnected.value = true;
 
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => Chat(),
-                                ),
-                              );
+                              if (mounted) {
+                                unawaited(
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const ChatScreen(),
+                                    ),
+                                  ),
+                                );
+                              }
                             },
                             child: Container(
-                              padding: EdgeInsets.symmetric(
-                                  vertical: 10.0, horizontal: 15.0),
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
                               child: Row(
                                 children: [
                                   CircleAvatar(
-                                    minRadius: 30.0,
+                                    minRadius: 30,
                                     child: Text(
-                                      hosts[hostKeys[__]][0].toUpperCase(),
-                                      style: TextStyle(
+                                      hosts[hostKeys[index]]?[0].toUpperCase() ?? 'unknown host',
+                                      style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 24,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                   ),
-                                  SizedBox(width: 25.0),
+                                  const SizedBox(width: 25),
                                   Expanded(
-                                    child: Container(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Container(
-                                            child: Text(
-                                              hosts[hostKeys[__]],
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          hosts[hostKeys[index]] ?? '',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w500,
                                           ),
-                                          SizedBox(height: 10.0),
-                                          Container(
-                                            child: Text(
-                                              hostKeys[__],
-                                              style: TextStyle(
-                                                color: Colors.white
-                                                    .withOpacity(.75),
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        Text(
+                                          hostKeys[index],
+                                          style: TextStyle(
+                                            color: Colors.white.withOpacity(.75),
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
-                                  )
+                                  ),
                                 ],
                               ),
                             ),
@@ -184,8 +161,8 @@ class _ClientHomeState extends State<ClientHome> {
                     },
                     itemCount: hosts.length,
                   )
-                : isHostLoading && hosts.length == 0
-                    ? Center(
+                : isHostLoading && hosts.isEmpty
+                    ? const Center(
                         child: CircularProgressIndicator(
                           valueColor: AlwaysStoppedAnimation(Colors.green),
                         ),
@@ -194,28 +171,26 @@ class _ClientHomeState extends State<ClientHome> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              child: Text(
-                                "No Hosts Found",
-                                style: TextStyle(
-                                  color: Colors.white60,
-                                  fontStyle: FontStyle.italic,
-                                  fontSize: 18,
-                                ),
+                            const Text(
+                              'No Hosts Found',
+                              style: TextStyle(
+                                color: Colors.white60,
+                                fontStyle: FontStyle.italic,
+                                fontSize: 18,
                               ),
                             ),
-                            SizedBox(
-                              height: 20.0,
+                            const SizedBox(
+                              height: 20,
                             ),
                             Material(
-                              borderRadius: BorderRadius.circular(50.0),
+                              borderRadius: BorderRadius.circular(50),
                               color: Colors.orange,
                               child: InkWell(
-                                borderRadius: BorderRadius.circular(50.0),
+                                borderRadius: BorderRadius.circular(50),
                                 onTap: pingHost,
                                 child: Container(
-                                  padding: EdgeInsets.all(10.0),
-                                  child: Icon(
+                                  padding: const EdgeInsets.all(10),
+                                  child: const Icon(
                                     Icons.sync,
                                     color: Colors.white,
                                     size: 32,
@@ -223,36 +198,39 @@ class _ClientHomeState extends State<ClientHome> {
                                 ),
                               ),
                             ),
-                            SizedBox(
-                              height: 20.0,
+                            const SizedBox(
+                              height: 20,
                             ),
                             Material(
-                              borderRadius: BorderRadius.circular(50.0),
+                              borderRadius: BorderRadius.circular(50),
                               color: Colors.green[700],
                               child: InkWell(
-                                borderRadius: BorderRadius.circular(50.0),
+                                borderRadius: BorderRadius.circular(50),
                                 onTap: () async {
                                   //  Reset ip to host IP
-                                  udp.disconnect();
+                                  udp?.disconnect();
 
-                                  udp = new UDP(ip.address);
-                                  await udp.connect();
+                                  udp = UDP(ip?.address ?? '');
+                                  udp?.connect();
 
                                   isHost = true;
 
                                   //  Navigate to Chat
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => Chat(),
-                                    ),
-                                  );
+                                  if (context.mounted) {
+                                    unawaited(
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const ChatScreen(),
+                                        ),
+                                      ),
+                                    );
+                                  }
                                 },
                                 child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                      vertical: 10.0, horizontal: 20.0),
-                                  child: Text(
-                                    "Host Chat",
+                                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                                  child: const Text(
+                                    'Host Chat',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 18,
@@ -268,5 +246,25 @@ class _ClientHomeState extends State<ClientHome> {
         ],
       ),
     );
+  }
+
+  Future<void> pingHost() async {
+    setState(() => isHostLoading = true);
+
+    for (var i = 0; i < 2; i++) {
+      debugPrint('Pinging to ${hostIp.address}');
+
+      final message = encode([ConnectionCode.getHost, ip?.address]);
+      udp?.send(message, hostIp.address);
+      await Future<void>.delayed(const Duration(seconds: 3));
+    }
+
+    setState(() => isHostLoading = false);
+  }
+
+  @override
+  void dispose() {
+    udp?.disconnect();
+    super.dispose();
   }
 }

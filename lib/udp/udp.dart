@@ -1,164 +1,165 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:offline_chat/utils/helper.dart';
-import 'package:offline_chat/modal/message.dart';
-import 'package:offline_chat/modal/person.dart';
+import 'package:flutter/cupertino.dart';
 
-///  Code to get host
-const int GET_HOST = 111;
+import '../modal/message.dart';
+import '../modal/person.dart';
+import '../utils/helper.dart';
 
-///  Code to accept client request before showing to client
-const int CONNECT = 112;
+enum ConnectionCode {
+  ///  Code to get host
+  getHost(111),
 
-///  Code to send message
-const int MESSAGE = 113;
+  ///  Code to accept client request before showing to client
+  connect(112),
 
-///  Code user joined
-const int USER_JOINED = 118;
+  ///  Code to send message
+  message(113),
 
-///  Code user left
-const int USER_LEFT = 119;
+  ///  Code user joined
+  userJoined(118),
 
-///  Response to GET_HOST by host
-const int HOST_RESPONSE = 114;
+  ///  Code user left
+  userLeft(119),
 
-///  Host Kill
-const int HOST_KILLED = 120;
+  ///  Response to GET_HOST by host
+  hostResponse(114),
+
+  ///  Host Kill
+  hostKilled(120);
+
+  const ConnectionCode(this.code);
+
+  final int code;
+}
 
 class UDP {
+  UDP(this.address) : ip = InternetAddress(address, type: InternetAddressType.IPv4);
+
   String address;
   InternetAddress ip;
-  RawDatagramSocket socket;
+  RawDatagramSocket? socket;
 
-  UDP(this.address) : super() {
-    this.ip = new InternetAddress(address, type: InternetAddressType.IPv4);
-  }
+  void connect() {
+    RawDatagramSocket.bind(ip, port).then((RawDatagramSocket udpSocket) {
+      socket = udpSocket;
+      socket?.broadcastEnabled = true;
 
-  connect() {
-    RawDatagramSocket.bind(ip, PORT).then((RawDatagramSocket udpSocket) {
-      this.socket = udpSocket;
-      this.socket.broadcastEnabled = true;
-
-      print("Datagram socket binded to: ${ip.address}");
+      debugPrint('Datagram socket binded to: ${ip.address}');
       setListener();
     });
   }
 
-  setListener() {
-    socket.listen((RawSocketEvent event) {
-      Datagram dg = socket.receive();
+  void setListener() {
+    socket?.listen((RawSocketEvent event) {
+      final dg = socket?.receive();
       if (dg != null) {
         handleData(dg);
       }
     });
   }
 
-  disconnect() {
-    socket.close();
-    print("Datagram socket on ${ip.address} closed");
+  void disconnect() {
+    socket?.close();
+    debugPrint('Datagram socket on ${ip.address} closed');
   }
 
   //  Send message to an individual IP
-  send(String message, String toAddress) {
-    print("Sending: ${decode(message)}");
-    List<int> data = utf8.encode(message);
+  void send(String message, String toAddress) {
+    debugPrint('Sending: ${decode(message)}');
+    final data = utf8.encode(message);
 
-    socket.send(
+    socket?.send(
       data,
       InternetAddress(toAddress, type: InternetAddressType.IPv4),
-      PORT,
+      port,
     );
   }
 
   //  Send message to a list of IP address model in PERSON object
-  broadcast(String message, List<Person> addresses) {
-    print("Broadcasting: ${decode(message)}");
-    List<int> data = utf8.encode(message);
+  void broadcast(String message, List<Person> addresses) {
+    debugPrint('Broadcasting: ${decode(message)}');
+    final data = utf8.encode(message);
 
-    addresses.forEach((person) {
-      socket.send(data, person.ip, PORT);
-    });
-  }
-
-  void handleData(Datagram dg) {
-    String receivedText = String.fromCharCodes(dg.data);
-    List<String> received = receivedText.split(X);
-    print("Received from X: $received");
-
-    int code = int.parse(received[0]);
-
-    switch (code) {
-      case GET_HOST:
-        hostResponse(received);
-        break;
-      case HOST_RESPONSE:
-        addHost(receivedText);
-        break;
-      case CONNECT:
-        isHost ? broadcastNewPerson(receivedText) : addNewperson(receivedText);
-        break;
-      case MESSAGE:
-        newMessage(receivedText);
-        break;
-      case USER_JOINED:
-        break;
-      case USER_LEFT:
-        break;
-      case HOST_KILLED:
-        break;
-      default:
-        print("Error code not found");
+    for (final person in addresses) {
+      socket?.send(data, person.ip, port);
     }
   }
 
-  hostResponse(List<String> received) {
-    String message =
-        new Person(HOST_RESPONSE, name, hostIp.address).encodeString();
-    socket.send(utf8.encode(message), InternetAddress(received[1]), PORT);
+  void handleData(Datagram dg) {
+    final receivedText = String.fromCharCodes(dg.data);
+    final received = receivedText.split(delimiter);
+    debugPrint('Received from X: $received');
+
+    final code = ConnectionCode.values.elementAt(int.parse(received[0]));
+
+    switch (code) {
+      case ConnectionCode.getHost:
+        hostResponse(received);
+      case ConnectionCode.hostResponse:
+        addHost(receivedText);
+      case ConnectionCode.connect:
+        isHost ? broadcastNewPerson(receivedText) : addNewPerson(receivedText);
+      case ConnectionCode.message:
+        newMessage(receivedText);
+      case ConnectionCode.userJoined:
+      case ConnectionCode.userLeft:
+      case ConnectionCode.hostKilled:
+    }
   }
 
-  addHost(String received) {
-    Person p = Person.decodeString(received);
+  void hostResponse(List<String> received) {
+    final message = Person(
+      ConnectionCode.hostResponse.index,
+      name,
+      hostIp.address,
+    ).encodeString();
+    socket?.send(utf8.encode(message), InternetAddress(received[1]), port);
+  }
+
+  void addHost(String received) {
+    final p = Person.decodeString(received);
     hosts.putIfAbsent(p.address, () => p.name);
   }
 
-  broadcastNewPerson(String message) {
-    print("New Person: ${decode(message)}");
+  void broadcastNewPerson(String message) {
+    debugPrint('New Person: ${decode(message)}');
 
-    people.forEach((person) {
-      socket.send(utf8.encode(message), person.ip, PORT);
-    });
-    addNewperson(message);
+    for (final person in people) {
+      socket?.send(utf8.encode(message), person.ip, port);
+    }
+    addNewPerson(message);
   }
 
-  addNewperson(String message) {
-    bool isMe = false;
+  void addNewPerson(String message) {
+    var isMe = false;
 
-    Person person = Person.decodeString(message);
+    final person = Person.decodeString(message);
 
-    people.forEach((element) {
-      print("Element Address: ${element.address}\nMy Address: ${ip.address}");
+    for (final person in people) {
+      debugPrint('Element Address: ${person.address}\nMy Address: ${ip.address}');
 
       if (isHost && person.address == hostIp.address) isMe = true;
       if (person.address == ip.address) isMe = true;
-      if (element.address == person.address) isMe = true;
-    });
+      if (person.address == person.address) isMe = true;
+    }
 
     if (!isMe) {
-      print("Adding ${person.address}");
+      debugPrint('Adding ${person.address}');
       people.add(person);
       messages.value.add(person);
     }
   }
 
-  newMessage(String message) {
-    messages.value.add(Message.decodeString(message));
-    messages.notifyListeners();
+  void newMessage(String message) {
+    messages.value = [
+      ...messages.value,
+      Message.decodeString(message),
+    ];
   }
 
-  hostKilled() {
+  void hostKilled() {
     hostConnected.value = false;
-    hostConnected.notifyListeners();
   }
 }

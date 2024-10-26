@@ -1,32 +1,31 @@
 import 'dart:io';
 
-import 'package:offline_chat/utils/helper.dart';
+import '../utils/helper.dart';
 
 class Person {
+  Person(this.code, this.name, this.address)
+      : ip = InternetAddress(
+          address,
+          type: InternetAddressType.IPv4,
+        );
+
+  factory Person.decodeString(String text) {
+    final val = decode(text);
+    final code = int.parse(val[0]);
+    final name = val[1];
+    final address = val[2];
+
+    return Person(code, name, address);
+  }
+
   final int code;
   final String address;
-  InternetAddress ip;
+  final InternetAddress ip;
   final String name;
-
-  Person(this.code, this.name, this.address) : super() {
-    this.ip = InternetAddress(
-      address,
-      type: InternetAddressType.IPv4,
-    );
-  }
 
   String encodeString() => encode([
         code.toString(),
         name,
         address,
       ]);
-
-  static Person decodeString(String text) {
-    List<String> val = decode(text);
-    int code = int.parse(val[0]);
-    String name = val[1];
-    String address = val[2];
-
-    return new Person(code, name, address);
-  }
 }

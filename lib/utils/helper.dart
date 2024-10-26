@@ -1,34 +1,34 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:offline_chat/udp/udp.dart';
 
 import '../modal/person.dart';
+import '../udp/udp.dart';
 
-ValueNotifier<List<dynamic>> messages = new ValueNotifier([]);
-UDP udp;
+ValueNotifier<List<dynamic>> messages = ValueNotifier([]);
+UDP? udp;
 
-Map<String, String> hosts = new Map();
-List<Person> people = new List();
+final hosts = <String, String>{};
+final people = <Person>[];
 
-InternetAddress ip;
-RawDatagramSocket socket;
+InternetAddress? ip;
+RawDatagramSocket? socket;
 
 final InternetAddress hostIp = InternetAddress(
-  "255.255.255.255",
+  '255.255.255.255',
   type: InternetAddressType.IPv4,
 );
 
-const int PORT = 8889;
-const String X = "#cut#";
-const String NAME = "name";
+const port = 8889;
+const delimiter = '#cut#';
+const nameKey = 'name';
 
 bool isHost = false;
 bool isActuallyHost = false;
-String name = "John Doe";
+String name = 'John Doe';
 
-List<String> decode(text) => text.split(X);
+List<String> decode(String text) => text.split(delimiter);
 
-String encode(List<dynamic> list) => list.join(X);
+String encode(List<dynamic> list) => list.join(delimiter);
 
-ValueNotifier<bool> hostConnected = new ValueNotifier(false);
+ValueNotifier<bool> hostConnected = ValueNotifier(false);
